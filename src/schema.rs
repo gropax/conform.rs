@@ -1,18 +1,39 @@
 use serde::{Deserialize, Serialize};
-use std::path::{Path, PathBuf};
-use thiserror::Error;
+use std::collections::HashMap;
 use std::fs;
 use std::io::Write;
+use std::path::Path;
+use thiserror::Error;
+
+#[derive(Serialize, Deserialize, Debug, Default)]
+pub enum Multiplicity {
+    #[default]
+    One,
+    Many,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(tag = "type")]
+pub enum FieldType {
+    Integer {},
+    Number {},
+    String { pattern: Option<String> },
+    Enum { values: Vec<String> },
+    Url { pattern: Option<String> },
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct SchemaField {
-    pub name: String,
+    pub r#type: FieldType,
+
+    #[serde(default)]
+    pub multiplicity: Multiplicity,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Schema {
     pub name: String,
-    pub fields: Vec<SchemaField>,
+    pub fields: HashMap<String, SchemaField>,
 }
 
 #[derive(Error, Debug)]

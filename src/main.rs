@@ -1,17 +1,18 @@
 mod cli;
+mod commands;
 mod schema;
 mod utils;
-mod commands;
 
+use anyhow::Result;
 use clap::Parser;
 use cli::{Cli, Commands};
 use commands::{CheckArgs, handle_check};
 
-fn main() {
+fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Check { 
+        Commands::Check {
             schema_file,
             verbose,
         } => {
@@ -19,8 +20,8 @@ fn main() {
                 schema_file,
                 verbose,
             };
-
-            handle_check(&args);
+            handle_check(&args)?;
+            Ok(())
         }
     }
 }

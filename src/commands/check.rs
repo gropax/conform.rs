@@ -1,6 +1,8 @@
-use std::path::{PathBuf};
-use tracing::{debug, error, info, warn};
+use crate::schema;
 use crate::utils;
+use anyhow::Result;
+use std::path::PathBuf;
+use tracing::{debug, error, info, warn};
 
 #[derive(Debug)]
 pub struct CheckArgs {
@@ -8,8 +10,9 @@ pub struct CheckArgs {
     pub verbose: u8,
 }
 
-pub fn handle_check(args: &CheckArgs) {
+pub fn handle_check(args: &CheckArgs) -> Result<()> {
     utils::init_tracing(args.verbose);
 
-    // TODO
+    let _schema = schema::load_schema(&args.schema_file)?;
+    Ok(())
 }
