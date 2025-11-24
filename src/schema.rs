@@ -14,20 +14,35 @@ pub enum Multiplicity {
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(tag = "type")]
-pub enum FieldType {
-    Integer {},
-    Number {},
-    String { pattern: Option<String> },
-    Enum { values: Vec<String> },
-    Url { pattern: Option<String> },
-}
+pub enum SchemaField {
+    Integer {
+        #[serde(default)]
+        multiplicity: Multiplicity,
+    },
+    Number {
+        #[serde(default)]
+        multiplicity: Multiplicity,
+    },
+    String {
+        #[serde(default)]
+        pattern: Option<String>,
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct SchemaField {
-    pub r#type: FieldType,
+        #[serde(default)]
+        multiplicity: Multiplicity,
+    },
+    Enum {
+        values: Vec<String>,
 
-    #[serde(default)]
-    pub multiplicity: Multiplicity,
+        #[serde(default)]
+        multiplicity: Multiplicity,
+    },
+    Url {
+        #[serde(default)]
+        starts_with: Option<String>,
+
+        #[serde(default)]
+        pattern: Option<String>,
+    },
 }
 
 #[derive(Serialize, Deserialize, Debug)]

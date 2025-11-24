@@ -1,0 +1,12 @@
+name = "album"
+
+[fields.title]
+type = "String"
+
+[fields.authors]
+type = "String"
+multiplicity = "Many"
+
+[fields.cover]
+type = "Url"
+starts_with = "https://www.albums.com/covers/"
