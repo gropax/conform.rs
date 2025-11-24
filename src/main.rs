@@ -6,7 +6,7 @@ mod utils;
 use anyhow::Result;
 use clap::Parser;
 use cli::{Cli, Commands};
-use commands::{CheckArgs, handle_check};
+use commands::check;
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
@@ -16,11 +16,11 @@ fn main() -> Result<()> {
             schema_file,
             verbose,
         } => {
-            let args = CheckArgs {
+            let args = check::Args {
                 schema_file,
                 verbose,
             };
-            handle_check(&args)?;
+            check::handle(&args)?;
             Ok(())
         }
     }
