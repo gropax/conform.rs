@@ -1,5 +1,5 @@
 mod cli;
-//mod collections;
+mod schema;
 mod utils;
 mod commands;
 

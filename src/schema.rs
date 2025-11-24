@@ -1,24 +1,23 @@
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
-use std::collections::HashMap;
 use thiserror::Error;
 use std::fs;
 use std::io::Write;
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Collection {
+pub struct SchemaField {
     pub name: String,
-    pub path: PathBuf,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default)]
-pub struct CollectionRegistry {
-    pub collections: HashMap<String, Collection>,
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Schema {
+    pub name: String,
+    pub fields: Vec<SchemaField>,
 }
 
 #[derive(Error, Debug)]
-pub enum RegistryError {
-    #[error("I/O error while accessing registry file: {0}")]
+pub enum SchemaError {
+    #[error("I/O error while accessing schema file: {0}")]
     Io(#[from] std::io::Error),
 
     #[error("TOML decoding error: {0}")]
@@ -28,23 +27,18 @@ pub enum RegistryError {
     TomlEncode(#[from] toml::ser::Error),
 }
 
-pub fn load_registry(path: &Path) -> Result<CollectionRegistry, RegistryError> {
-    if !path.exists() {
-        return Ok(CollectionRegistry::default());
-    }
-
+pub fn load_schema(path: &Path) -> Result<Schema, SchemaError> {
     let content = fs::read_to_string(path)?;
-    let registry = toml::from_str(&content)?;
-
-    Ok(registry)
+    let schema = toml::from_str(&content)?;
+    Ok(schema)
 }
 
-pub fn save_registry(path: &Path, registry: &CollectionRegistry) -> Result<(), RegistryError> {
+pub fn save_schema(path: &Path, schema: &Schema) -> Result<(), SchemaError> {
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent)?;
     }
 
-    let toml_string = toml::to_string_pretty(registry)?;
+    let toml_string = toml::to_string_pretty(schema)?;
 
     let mut file = fs::File::create(path)?;
     file.write_all(toml_string.as_bytes())?;
