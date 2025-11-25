@@ -6,7 +6,6 @@ use std::path::{Path, PathBuf};
 use tracing::{debug, error, info, warn};
 use serde_yaml::Value;
 use thiserror::Error;
-use crate::schema::SchemaField;
 
 #[derive(Debug)]
 pub struct Args {
@@ -40,58 +39,16 @@ pub fn handle(args: &Args) -> Result<()> {
     let document = load_document(&args.document_file)?;
     let mut validation_errors = Vec::<ValidationError>::new();
 
-    for (field_name, field_type) in &schema.fields {
-        if let Some(field_value) = document.get(field_name) {
-            match field_type {
-                SchemaField::Integer {
-                    multiplicity,
-                } => {
-                }
-
-                SchemaField::Number {
-                    multiplicity,
-                } => {
-                }
-
-                SchemaField::String {
-                    multiplicity,
-                    pattern,
-                } => {
-                    //if let Some(list) = field_value.as_array() {
-                    //    if let Multiplicity::One = multiplicity {
-                    //        validation_errors.push(ValidationError {
-                    //            document: args.document_file.clone(),
-                    //            field_name: field_name.to_string(),
-                    //            error: ValidationErrorType::MultiplicityMismatch {
-                    //                expected: Multiplicity::One,
-                    //                found: Multiplicity::Many,
-                    //            },
-                    //        });
-                    //    }
-                    //}
-                }
-
-                SchemaField::Enum {
-                    multiplicity,
-                    values,
-                } => {
-                }
-
-                SchemaField::Url {
-                    multiplicity,
-                    starts_with,
-                    pattern,
-                } => {
-                }
-            }
-        } else {
-            validation_errors.push(ValidationError {
-                document: args.document_file.clone(),
-                field_name: field_name.to_string(),
-                error: ValidationErrorType::MissingField { },
-            });
-        }
-    }
+    //for (field_name, field_type) in &schema.fields {
+    //    if let Some(field_value) = document.get(field_name) {
+    //    } else {
+    //        validation_errors.push(ValidationError {
+    //            document: args.document_file.clone(),
+    //            field_name: field_name.to_string(),
+    //            error: ValidationErrorType::MissingField { },
+    //        });
+    //    }
+    //}
 
     Ok(())
 }

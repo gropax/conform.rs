@@ -132,6 +132,7 @@ dependencies = [
  "anyhow",
  "clap",
  "directories-next",
+ "regex",
  "serde",
  "serde_yaml",
  "thiserror 2.0.17",
@@ -309,6 +310,18 @@ dependencies = [
  "getrandom",
  "libredox",
  "thiserror 1.0.69",
+]
+
+[[package]]
+name = "regex"
+version = "1.12.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "843bc0191f75f3e22651ae5f1e72939ab2f72a4bc30fa80a066bd66edefc24d4"
+dependencies = [
+ "aho-corasick",
+ "memchr",
+ "regex-automata",
+ "regex-syntax",
 ]
 
 [[package]]
