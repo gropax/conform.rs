@@ -1,5 +1,6 @@
-use std::collections::HashMap;
+use std::path::PathBuf;
 use std::fmt;
+use std::collections::HashMap;
 
 #[derive(Debug)]
 pub enum Scalar {
@@ -50,6 +51,13 @@ impl Value {
 }
 
 #[derive(Debug)]
+pub struct Field {
+    pub name: String,
+    pub value: Value,
+}
+
+#[derive(Debug)]
 pub struct Document {
-    pub fields: HashMap<String, Value>,
+    pub file_path: PathBuf,
+    pub fields: HashMap<String, Field>,
 }

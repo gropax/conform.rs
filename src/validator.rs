@@ -1,6 +1,7 @@
 use crate::document;
 use crate::schema::{Field, FieldType, Multiplicity, NumberConstraint, Schema, StringConstraint};
 use regex::Regex;
+use std::collections::HashSet;
 use std::path::PathBuf;
 use url::Url;
 
@@ -146,10 +147,12 @@ impl ValueValidator {
 
             ValueValidator::Number(validators) => {
                 if let document::Scalar::Number(number) = value {
-                    errors.extend(validators
-                        .iter()
-                        .filter_map(|v| v.validate(*number))
-                        .collect::<Vec<_>>());
+                    errors.extend(
+                        validators
+                            .iter()
+                            .filter_map(|v| v.validate(*number))
+                            .collect::<Vec<_>>(),
+                    );
                 } else {
                     errors.push(ValidationError {
                         message: format!("{} is not a number", value),
@@ -159,10 +162,12 @@ impl ValueValidator {
 
             ValueValidator::String(validators) => {
                 if let document::Scalar::String(string) = value {
-                    errors.extend(validators
-                        .iter()
-                        .filter_map(|v| v.validate(string))
-                        .collect::<Vec<_>>());
+                    errors.extend(
+                        validators
+                            .iter()
+                            .filter_map(|v| v.validate(string))
+                            .collect::<Vec<_>>(),
+                    );
                 } else {
                     errors.push(ValidationError {
                         message: format!("{} is not a string", value),
@@ -189,8 +194,9 @@ struct FieldValidator {
 }
 
 impl FieldValidator {
-    fn validate(&self, value: &document::Value) -> Option<FieldError> {
+    fn validate(&self, field: &document::Field) -> Option<FieldError> {
         let mut errors = vec![];
+        let value = &field.value;
 
         if let Some(mult_error) = self.validate_multiplicity(value) {
             errors.push(mult_error);
@@ -297,18 +303,62 @@ impl From<&Field> for FieldValidator {
     }
 }
 
-pub struct Validator {
+pub struct DocumentValidator {
+    field_names: HashSet<String>,
     fields: Vec<FieldValidator>,
 }
 
-impl From<&Schema> for Validator {
-    fn from(schema: &Schema) -> Self {
-        let fields = schema
-            .fields
-            .iter()
-            .map(|f| FieldValidator::from(f))
-            .collect();
+impl DocumentValidator {
+    fn validate(&self, document: &document::Document) -> Option<DocumentError> {
+        let mut fields = vec![];
 
-        Validator { fields }
+        for field_validator in &self.fields {
+            if let Some(document_field) = document.fields.get(&field_validator.name) {
+                if let Some(field_error) = field_validator.validate(document_field) {
+                    fields.push(field_error)
+                }
+            } else {
+                fields.push(FieldError {
+                    field_name: field_validator.name.to_string(),
+                    errors: vec![ValidationError {
+                        message: format!("field [{}] is missing", field_validator.name),
+                    }],
+                    values: vec![],
+                })
+            }
+        }
+
+        let mut errors = vec![];
+
+        for field_name in document.fields.keys() {
+            if !self.field_names.contains(field_name) {
+                errors.push(ValidationError {
+                    message: format!("field [{}] is unknown", field_name),
+                })
+            }
+        }
+
+        if fields.is_empty() {
+            None
+        } else {
+            Some(DocumentError {
+                file_path: document.file_path.clone(),
+                errors,
+                fields,
+            })
+        }
+    }
+}
+
+impl From<&Schema> for DocumentValidator {
+    fn from(schema: &Schema) -> Self {
+        let fields = schema.fields.iter().map(FieldValidator::from).collect();
+        let field_names: HashSet<String> =
+            schema.fields.iter().map(|f| f.name.to_string()).collect();
+
+        DocumentValidator {
+            field_names,
+            fields,
+        }
     }
 }
