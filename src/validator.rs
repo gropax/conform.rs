@@ -309,7 +309,7 @@ pub struct DocumentValidator {
 }
 
 impl DocumentValidator {
-    fn validate(&self, document: &document::Document) -> Option<DocumentError> {
+    pub fn validate(&self, document: &document::Document) -> Option<DocumentError> {
         let mut fields = vec![];
 
         for field_validator in &self.fields {

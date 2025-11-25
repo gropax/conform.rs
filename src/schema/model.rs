@@ -1,5 +1,7 @@
 use regex::Regex;
 
+use crate::validator::DocumentValidator;
+
 #[derive(Debug, Clone, Copy, Default)]
 pub enum Multiplicity {
     #[default]
@@ -40,4 +42,10 @@ pub struct Field {
 pub struct Schema {
     pub name: String,
     pub fields: Vec<Field>,
+}
+
+impl Schema {
+    pub fn compile(&self) -> DocumentValidator {
+        DocumentValidator::from(self)
+    }
 }

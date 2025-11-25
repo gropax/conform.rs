@@ -23,11 +23,13 @@ impl fmt::Display for Scalar {
 pub enum Value {
     Single(Scalar),
     List(Vec<Scalar>),
+    Invalid,
 }
 
 pub enum ValueIter<'a> {
     Single(std::option::IntoIter<&'a Scalar>),
     List(std::slice::Iter<'a, Scalar>),
+    Invalid,
 }
 
 impl<'a> Iterator for ValueIter<'a> {
@@ -37,6 +39,7 @@ impl<'a> Iterator for ValueIter<'a> {
         match self {
             ValueIter::Single(iter) => iter.next(),
             ValueIter::List(iter) => iter.next(),
+            ValueIter::Invalid => None,
         }
     }
 }
@@ -46,6 +49,7 @@ impl Value {
         match self {
             Value::Single(s) => ValueIter::Single(Some(s).into_iter()),
             Value::List(v) => ValueIter::List(v.iter()),
+            Value::Invalid => ValueIter::Invalid,
         }
     }
 }
