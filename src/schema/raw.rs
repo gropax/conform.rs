@@ -15,20 +15,19 @@ pub enum RawMultiplicity {
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(tag = "type")]
 pub enum RawField {
-    Integer {
-        #[serde(default)]
-        multiplicity: RawMultiplicity,
-    },
     Number {
         #[serde(default)]
         multiplicity: RawMultiplicity,
     },
     String {
         #[serde(default)]
-        pattern: Option<String>,
+        multiplicity: RawMultiplicity,
 
         #[serde(default)]
-        multiplicity: RawMultiplicity,
+        starts_with: Option<String>,
+
+        #[serde(default)]
+        pattern: Option<String>,
     },
     Enum {
         values: Vec<String>,
@@ -38,13 +37,13 @@ pub enum RawField {
     },
     Url {
         #[serde(default)]
+        multiplicity: RawMultiplicity,
+
+        #[serde(default)]
         starts_with: Option<String>,
 
         #[serde(default)]
         pattern: Option<String>,
-
-        #[serde(default)]
-        multiplicity: RawMultiplicity,
     },
 }
 

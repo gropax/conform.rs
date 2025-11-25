@@ -23,7 +23,10 @@ pub enum NumberContraint {
 #[derive(Debug)]
 pub enum StringContraint {
     Url,
+    Enum(Vec<String>),
     Pattern(String),
+    StartsWith(String),
+    EndsWith(String),
 }
 
 #[derive(Debug)]
