@@ -21,7 +21,7 @@
         packages.default = pkgs.rustPlatform.buildRustPackage {
           pname = "conform";
           version = "0.1.0";
-          src = ./.;
+          src = pkgs.lib.cleanSource ./.;  # Prevent rebuilding after modifying non source file
           cargoLock = {
             lockFile = ./Cargo.lock;
           };
