@@ -2,10 +2,16 @@ use super::{
     Field, FieldType, Multiplicity, NumberContraint, RawField, RawMultiplicity, RawSchema, Schema,
     StringContraint,
 };
+use regex::Regex;
 use std::collections::HashMap;
 use std::convert::TryFrom;
+use thiserror::Error;
 
-pub struct SchemaError {}
+#[derive(Error, Debug)]
+pub enum SchemaError {
+    #[error("Regex parsing error: {0}")]
+    Regex(#[from] regex::Error),
+}
 
 impl TryFrom<RawMultiplicity> for Multiplicity {
     type Error = SchemaError;
@@ -18,6 +24,24 @@ impl TryFrom<RawMultiplicity> for Multiplicity {
 
         Ok(mult)
     }
+}
+
+fn string_constraints(
+    starts_with: Option<String>,
+    pattern: Option<String>,
+) -> Result<Vec<StringContraint>, SchemaError> {
+    let mut constraints = Vec::<StringContraint>::new();
+
+    if let Some(starts_with_val) = starts_with {
+        constraints.push(StringContraint::StartsWith(starts_with_val));
+    }
+
+    if let Some(pattern_val) = pattern {
+        let regex = Regex::new(&pattern_val)?;
+        constraints.push(StringContraint::Pattern(regex));
+    }
+
+    Ok(constraints)
 }
 
 fn convert_field(name: String, raw: RawField) -> Result<Field, SchemaError> {
@@ -37,7 +61,6 @@ fn convert_field(name: String, raw: RawField) -> Result<Field, SchemaError> {
             values,
         } => {
             let mult = Multiplicity::try_from(multiplicity)?;
-
             let constraints = vec![StringContraint::Enum(values)];
 
             Field {
@@ -53,16 +76,7 @@ fn convert_field(name: String, raw: RawField) -> Result<Field, SchemaError> {
             pattern,
         } => {
             let mult = Multiplicity::try_from(multiplicity)?;
-
-            let mut constraints = Vec::<StringContraint>::new();
-
-            if let Some(starts_with_val) = starts_with {
-                constraints.push(StringContraint::StartsWith(starts_with_val));
-            }
-
-            if let Some(pattern_val) = pattern {
-                constraints.push(StringContraint::Pattern(pattern_val));
-            }
+            let constraints = string_constraints(starts_with, pattern)?;
 
             Field {
                 name,
@@ -77,17 +91,8 @@ fn convert_field(name: String, raw: RawField) -> Result<Field, SchemaError> {
             pattern,
         } => {
             let mult = Multiplicity::try_from(multiplicity)?;
-
-            let mut constraints = Vec::<StringContraint>::new();
+            let mut constraints = string_constraints(starts_with, pattern)?;
             constraints.push(StringContraint::Url);
-
-            if let Some(starts_with_val) = starts_with {
-                constraints.push(StringContraint::StartsWith(starts_with_val));
-            }
-
-            if let Some(pattern_val) = pattern {
-                constraints.push(StringContraint::Pattern(pattern_val));
-            }
 
             Field {
                 name,

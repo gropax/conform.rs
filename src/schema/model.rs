@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use regex::Regex;
 
 #[derive(Debug, Default)]
 pub enum Multiplicity {
@@ -24,7 +25,7 @@ pub enum NumberContraint {
 pub enum StringContraint {
     Url,
     Enum(Vec<String>),
-    Pattern(String),
+    Pattern(Regex),
     StartsWith(String),
     EndsWith(String),
 }
