@@ -1,0 +1,55 @@
+use std::collections::HashMap;
+use std::fmt;
+
+#[derive(Debug)]
+pub enum Scalar {
+    Bool(bool),
+    Number(f64),
+    String(String),
+}
+
+impl fmt::Display for Scalar {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Scalar::Bool(v) => write!(f, "{v}"),
+            Scalar::Number(v) => write!(f, "{v}"),
+            Scalar::String(v) => write!(f, "\"{v}\""),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub enum Value {
+    Single(Scalar),
+    List(Vec<Scalar>),
+}
+
+pub enum ValueIter<'a> {
+    Single(std::option::IntoIter<&'a Scalar>),
+    List(std::slice::Iter<'a, Scalar>),
+}
+
+impl<'a> Iterator for ValueIter<'a> {
+    type Item = &'a Scalar;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self {
+            ValueIter::Single(iter) => iter.next(),
+            ValueIter::List(iter) => iter.next(),
+        }
+    }
+}
+
+impl Value {
+    pub fn iter(&self) -> ValueIter<'_> {
+        match self {
+            Value::Single(s) => ValueIter::Single(Some(s).into_iter()),
+            Value::List(v) => ValueIter::List(v.iter()),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct Document {
+    pub fields: HashMap<String, Value>,
+}

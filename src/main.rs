@@ -1,6 +1,7 @@
 mod cli;
 mod commands;
 mod schema;
+mod document;
 mod validator;
 mod utils;
 
