@@ -1,0 +1,68 @@
+use super::Document;
+use super::convert::{DocumentError, document};
+use serde_json::Value as JsonValue;
+use serde_yaml::Value as YamlValue;
+use std::fs;
+use std::path::PathBuf;
+use thiserror::Error;
+
+#[derive(Debug, Error)]
+pub enum LoadError {
+    #[error("I/O error: {0}")]
+    Io(#[from] std::io::Error),
+
+    #[error("Unsupported file extension: {0}")]
+    UnsupportedExtension(String),
+
+    #[error("JSON parse error: {0}")]
+    Json(#[from] serde_json::Error),
+
+    #[error("YAML parse error: {0}")]
+    Yaml(#[from] serde_yaml::Error),
+
+    #[error("Can't get YAML frontmatter")]
+    Markdown,
+
+    #[error("Document structure error: {0}")]
+    Document(#[from] DocumentError),
+}
+
+pub fn parse_json(input: &str, file_path: &PathBuf) -> Result<Document, LoadError> {
+    let json: JsonValue = serde_json::from_str(input)?;
+    let document = document(json, file_path)?;
+    Ok(document)
+}
+
+pub fn parse_yaml(input: &str, file_path: &PathBuf) -> Result<Document, LoadError> {
+    let yaml: YamlValue = serde_yaml::from_str(input)?;
+    let json: JsonValue = serde_json::to_value(yaml)?;
+    let document = document(json, file_path)?;
+    Ok(document)
+}
+
+fn extract_frontmatter(input: &str) -> Option<&str> {
+    let rest = input.strip_prefix("---\n")?;
+    let end = rest.find("\n---\n")?;
+    let (front, _) = rest.split_at(end);
+    Some(front)
+}
+
+pub fn parse_markdown(input: &str, file_path: &PathBuf) -> Result<Document, LoadError> {
+    let frontmatter = extract_frontmatter(input).ok_or(LoadError::Markdown)?;
+    parse_yaml(frontmatter, file_path)
+}
+
+pub fn parse(file_path: impl Into<PathBuf>) -> Result<Document, LoadError> {
+    let path = file_path.into();
+    let input = fs::read_to_string(&path)?;
+
+    match path.extension().and_then(|ext| ext.to_str()) {
+        Some("json") => parse_json(&input, &path),
+        Some("yaml") | Some("yml") => parse_yaml(&input, &path),
+        Some("md") | Some("markdown") => parse_markdown(&input, &path),
+
+        other => Err(LoadError::UnsupportedExtension(
+                other.unwrap_or("").to_string(),
+        )),
+    }
+}

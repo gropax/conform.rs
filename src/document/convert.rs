@@ -5,17 +5,16 @@ use std::path::PathBuf;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
-pub enum ParseError {
-    #[error("JSON parse error: {0}")]
-    Json(#[from] serde_json::Error),
-
+pub enum DocumentError {
     #[error("Top-level JSON must be an object (mapping)")]
     RootNotObject,
 }
 
-pub fn parse_document(input: &str, file_path: &PathBuf) -> Result<Document, ParseError> {
-    let root: JsonValue = serde_json::from_str(input)?;
-    let object = root.as_object().ok_or(ParseError::RootNotObject).unwrap();
+pub fn document(root: JsonValue, file_path: &PathBuf) -> Result<Document, DocumentError> {
+    let object = root
+        .as_object()
+        .ok_or(DocumentError::RootNotObject)
+        .unwrap();
 
     let mut fields = HashMap::new();
 
