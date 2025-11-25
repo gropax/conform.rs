@@ -33,11 +33,11 @@ pub enum ValidationErrorType {
 pub fn handle(args: &Args) -> Result<()> {
     utils::init_tracing(args.verbose);
 
-    let schema = schema::load_schema(&args.schema_file)?;
-    info!("Loaded schema from file: {}", args.schema_file.display());
+    //let schema = schema::load_schema(&args.schema_file)?;
+    //info!("Loaded schema from file: {}", args.schema_file.display());
 
-    let document = load_document(&args.document_file)?;
-    let mut validation_errors = Vec::<ValidationError>::new();
+    //let document = load_document(&args.document_file)?;
+    //let mut validation_errors = Vec::<ValidationError>::new();
 
     //for (field_name, field_type) in &schema.fields {
     //    if let Some(field_value) = document.get(field_name) {

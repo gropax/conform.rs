@@ -1,6 +1,6 @@
 use super::{
-    Field, FieldType, Multiplicity, NumberContraint, RawField, RawMultiplicity, RawSchema, Schema,
-    StringContraint,
+    Field, FieldType, Multiplicity, NumberContraint, Schema, StringContraint, raw::RawField,
+    raw::RawMultiplicity, raw::RawSchema,
 };
 use regex::Regex;
 use std::collections::HashMap;
