@@ -42,6 +42,9 @@ pub enum SchemaField {
 
         #[serde(default)]
         pattern: Option<String>,
+
+        #[serde(default)]
+        multiplicity: Multiplicity,
     },
 }
 

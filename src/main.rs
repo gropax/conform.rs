@@ -6,6 +6,7 @@ mod utils;
 use anyhow::Result;
 use clap::Parser;
 use cli::{Cli, Commands};
+use commands::apply;
 use commands::check;
 
 fn main() -> Result<()> {
@@ -21,6 +22,20 @@ fn main() -> Result<()> {
                 verbose,
             };
             check::handle(&args)?;
+            Ok(())
+        }
+
+        Commands::Apply {
+            schema_file,
+            document_file,
+            verbose,
+        } => {
+            let args = apply::Args {
+                schema_file,
+                document_file,
+                verbose,
+            };
+            apply::handle(&args)?;
             Ok(())
         }
     }

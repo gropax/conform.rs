@@ -18,4 +18,13 @@ pub enum Commands {
         #[arg(short, long, action = ArgAction::Count)]
         verbose: u8,
     },
+
+    #[command(arg_required_else_help = true)]
+    Apply {
+        schema_file: PathBuf,
+        document_file: PathBuf,
+
+        #[arg(short, long, action = ArgAction::Count)]
+        verbose: u8,
+    },
 }
