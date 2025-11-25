@@ -1,9 +1,8 @@
 use super::{
-    Field, FieldType, Multiplicity, NumberContraint, Schema, StringContraint, raw::RawField,
+    Field, FieldType, Multiplicity, NumberConstraint, Schema, StringConstraint, raw::RawField,
     raw::RawMultiplicity, raw::RawSchema,
 };
 use regex::Regex;
-use std::collections::HashMap;
 use std::convert::TryFrom;
 use thiserror::Error;
 
@@ -26,19 +25,26 @@ impl TryFrom<RawMultiplicity> for Multiplicity {
     }
 }
 
+fn number_constraints(
+) -> Result<Vec<NumberConstraint>, SchemaError> {
+    let mut constraints = Vec::<NumberConstraint>::new();
+
+    Ok(constraints)
+}
+
 fn string_constraints(
     starts_with: Option<String>,
     pattern: Option<String>,
-) -> Result<Vec<StringContraint>, SchemaError> {
-    let mut constraints = Vec::<StringContraint>::new();
+) -> Result<Vec<StringConstraint>, SchemaError> {
+    let mut constraints = Vec::<StringConstraint>::new();
 
     if let Some(starts_with_val) = starts_with {
-        constraints.push(StringContraint::StartsWith(starts_with_val));
+        constraints.push(StringConstraint::StartsWith(starts_with_val));
     }
 
     if let Some(pattern_val) = pattern {
         let regex = Regex::new(&pattern_val)?;
-        constraints.push(StringContraint::Pattern(regex));
+        constraints.push(StringConstraint::Pattern(pattern_val, regex));
     }
 
     Ok(constraints)
@@ -48,11 +54,12 @@ fn convert_field(name: String, raw: RawField) -> Result<Field, SchemaError> {
     let field = match raw {
         RawField::Number { multiplicity } => {
             let mult = Multiplicity::try_from(multiplicity)?;
+            let constraints = number_constraints()?;
 
             Field {
                 name,
                 multiplicity: mult,
-                r#type: FieldType::Number,
+                kind: FieldType::Number(constraints),
             }
         }
 
@@ -61,12 +68,12 @@ fn convert_field(name: String, raw: RawField) -> Result<Field, SchemaError> {
             values,
         } => {
             let mult = Multiplicity::try_from(multiplicity)?;
-            let constraints = vec![StringContraint::Enum(values)];
+            let constraints = vec![StringConstraint::Enum(values)];
 
             Field {
                 name,
                 multiplicity: mult,
-                r#type: FieldType::String(constraints),
+                kind: FieldType::String(constraints),
             }
         }
 
@@ -81,7 +88,7 @@ fn convert_field(name: String, raw: RawField) -> Result<Field, SchemaError> {
             Field {
                 name,
                 multiplicity: mult,
-                r#type: FieldType::String(constraints),
+                kind: FieldType::String(constraints),
             }
         }
 
@@ -92,12 +99,12 @@ fn convert_field(name: String, raw: RawField) -> Result<Field, SchemaError> {
         } => {
             let mult = Multiplicity::try_from(multiplicity)?;
             let mut constraints = string_constraints(starts_with, pattern)?;
-            constraints.push(StringContraint::Url);
+            constraints.push(StringConstraint::Url);
 
             Field {
                 name,
                 multiplicity: mult,
-                r#type: FieldType::String(constraints),
+                kind: FieldType::String(constraints),
             }
         }
     };
@@ -109,16 +116,11 @@ impl TryFrom<RawSchema> for Schema {
     type Error = SchemaError;
 
     fn try_from(raw: RawSchema) -> Result<Schema, Self::Error> {
-        let field_results = raw
+        let fields = raw
             .fields
             .into_iter()
             .map(|(name, field)| convert_field(name, field))
             .collect::<Result<Vec<_>, _>>()?;
-
-        let fields: HashMap<String, Field> = field_results
-            .into_iter()
-            .map(|f| (f.name.to_string(), f))
-            .collect();
 
         let schema = Schema {
             name: raw.name.to_string(),

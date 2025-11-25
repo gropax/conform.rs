@@ -1,7 +1,6 @@
-use std::collections::HashMap;
 use regex::Regex;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Clone, Copy, Default)]
 pub enum Multiplicity {
     #[default]
     One,
@@ -11,21 +10,21 @@ pub enum Multiplicity {
 #[derive(Debug)]
 pub enum FieldType {
     Bool,
-    Number,
-    String(Vec<StringContraint>),
+    Number(Vec<NumberConstraint>),
+    String(Vec<StringConstraint>),
 }
 
 #[derive(Debug)]
-pub enum NumberContraint {
+pub enum NumberConstraint {
     Above(f64),
     Below(f64),
 }
 
 #[derive(Debug)]
-pub enum StringContraint {
+pub enum StringConstraint {
     Url,
     Enum(Vec<String>),
-    Pattern(Regex),
+    Pattern(String, Regex),
     StartsWith(String),
     EndsWith(String),
 }
@@ -34,11 +33,11 @@ pub enum StringContraint {
 pub struct Field {
     pub name: String,
     pub multiplicity: Multiplicity,
-    pub r#type: FieldType,
+    pub kind: FieldType,
 }
 
 #[derive(Debug)]
 pub struct Schema {
     pub name: String,
-    pub fields: HashMap<String, Field>,
+    pub fields: Vec<Field>,
 }

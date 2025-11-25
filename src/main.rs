@@ -1,6 +1,7 @@
 mod cli;
 mod commands;
 mod schema;
+mod validator;
 mod utils;
 
 use anyhow::Result;
