@@ -4,26 +4,36 @@ use std::collections::HashMap;
 
 #[derive(Debug)]
 pub enum Scalar {
-    Bool(bool),
-    Number(f64),
-    String(String),
+    Bool { span: Span, value: bool },
+    Number { span: Span, value: f64 },
+    String { span: Span, value: String },
+}
+
+impl Scalar {
+    pub fn span(&self) -> Span {
+        match *self {
+            Scalar::Bool { span, value: _ } => span,
+            Scalar::Number { span, value: _ } => span,
+            Scalar::String { span, value: _ } => span,
+        }
+    }
 }
 
 impl fmt::Display for Scalar {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Scalar::Bool(v) => write!(f, "{v}"),
-            Scalar::Number(v) => write!(f, "{v}"),
-            Scalar::String(v) => write!(f, "\"{v}\""),
+            Scalar::Bool { span: _, value } => write!(f, "{value}"),
+            Scalar::Number { span: _, value } => write!(f, "{value}"),
+            Scalar::String { span: _, value } => write!(f, "\"{value}\""),
         }
     }
 }
 
 #[derive(Debug)]
 pub enum Value {
-    Single(Scalar),
-    List(Vec<Scalar>),
-    Invalid,
+    Single(Span, Scalar),
+    List(Span, Vec<Scalar>),
+    Invalid(Span),
 }
 
 pub enum ValueIter<'a> {
@@ -47,14 +57,14 @@ impl<'a> Iterator for ValueIter<'a> {
 impl Value {
     pub fn iter(&self) -> ValueIter<'_> {
         match self {
-            Value::Single(s) => ValueIter::Single(Some(s).into_iter()),
-            Value::List(v) => ValueIter::List(v.iter()),
-            Value::Invalid => ValueIter::Invalid,
+            Value::Single(_, s) => ValueIter::Single(Some(s).into_iter()),
+            Value::List(_, v) => ValueIter::List(v.iter()),
+            Value::Invalid(_) => ValueIter::Invalid,
         }
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Span {
     pub line: usize,
     pub column: usize,
@@ -76,4 +86,5 @@ pub struct Field {
 pub struct Document {
     pub file_path: PathBuf,
     pub fields: HashMap<String, Field>,
+    pub span: Span,
 }

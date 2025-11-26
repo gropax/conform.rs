@@ -8,6 +8,7 @@ use url::Url;
 #[derive(Debug)]
 pub struct ValidationError {
     pub message: String,
+    pub span: document::Span,
 }
 
 #[derive(Debug)]
@@ -31,11 +32,11 @@ pub struct DocumentError {
 }
 
 trait ValidateNumber {
-    fn validate(&self, value: f64) -> Option<ValidationError>;
+    fn validate(&self, span: document::Span, value: f64) -> Option<ValidationError>;
 }
 
 trait ValidateString {
-    fn validate(&self, value: &str) -> Option<ValidationError>;
+    fn validate(&self, span: document::Span, value: &str) -> Option<ValidationError>;
 }
 
 struct AboveValidator {
@@ -43,9 +44,10 @@ struct AboveValidator {
 }
 
 impl ValidateNumber for AboveValidator {
-    fn validate(&self, value: f64) -> Option<ValidationError> {
+    fn validate(&self, span: document::Span, value: f64) -> Option<ValidationError> {
         (value < self.min).then(|| ValidationError {
             message: format!("Expected number >= {}, found {}", self.min, value),
+            span,
         })
     }
 }
@@ -55,9 +57,10 @@ struct BelowValidator {
 }
 
 impl ValidateNumber for BelowValidator {
-    fn validate(&self, value: f64) -> Option<ValidationError> {
+    fn validate(&self, span: document::Span, value: f64) -> Option<ValidationError> {
         (value > self.max).then(|| ValidationError {
             message: format!("Expected number <= {}, found {}", self.max, value),
+            span,
         })
     }
 }
@@ -65,9 +68,10 @@ impl ValidateNumber for BelowValidator {
 struct UrlValidator {}
 
 impl ValidateString for UrlValidator {
-    fn validate(&self, value: &str) -> Option<ValidationError> {
+    fn validate(&self, span: document::Span, value: &str) -> Option<ValidationError> {
         Url::parse(value).err().map(|_| ValidationError {
             message: format!("\"{}\" is not an URL", value),
+            span,
         })
     }
 }
@@ -77,13 +81,14 @@ struct EnumValidator {
 }
 
 impl ValidateString for EnumValidator {
-    fn validate(&self, value: &str) -> Option<ValidationError> {
+    fn validate(&self, span: document::Span, value: &str) -> Option<ValidationError> {
         (!self.values.iter().any(|v| v == value)).then(|| ValidationError {
             message: format!(
                 "\"{}\" don't match any of [{}]",
                 value,
                 self.values.join(", ")
             ),
+            span,
         })
     }
 }
@@ -93,9 +98,10 @@ struct StartsWithValidator {
 }
 
 impl ValidateString for StartsWithValidator {
-    fn validate(&self, value: &str) -> Option<ValidationError> {
+    fn validate(&self, span: document::Span, value: &str) -> Option<ValidationError> {
         (!value.starts_with(&self.prefix)).then(|| ValidationError {
             message: format!("\"{}\" don't start with \"{}\"", value, self.prefix),
+            span,
         })
     }
 }
@@ -105,9 +111,10 @@ struct EndsWithValidator {
 }
 
 impl ValidateString for EndsWithValidator {
-    fn validate(&self, value: &str) -> Option<ValidationError> {
+    fn validate(&self, span: document::Span, value: &str) -> Option<ValidationError> {
         (!value.ends_with(&self.suffix)).then(|| ValidationError {
             message: format!("\"{}\" don't ends with \"{}\"", value, self.suffix),
+            span,
         })
     }
 }
@@ -118,59 +125,63 @@ struct RegexValidator {
 }
 
 impl ValidateString for RegexValidator {
-    fn validate(&self, value: &str) -> Option<ValidationError> {
+    fn validate(&self, span: document::Span, value: &str) -> Option<ValidationError> {
         (!self.regex.is_match(value)).then(|| ValidationError {
             message: format!("\"{}\" don't match pattern /{}/", value, self.pattern),
+            span,
         })
     }
 }
 
-enum ValueValidator {
+enum ScalarValidator {
     Bool,
     Number(Vec<Box<dyn ValidateNumber>>),
     String(Vec<Box<dyn ValidateString>>),
 }
 
-impl ValueValidator {
+impl ScalarValidator {
     fn validate(&self, index: usize, value: &document::Scalar) -> Option<ValueError> {
         let mut errors = vec![];
 
         match self {
-            ValueValidator::Bool => {
-                if let document::Scalar::Bool(_) = value {
+            ScalarValidator::Bool => {
+                if let document::Scalar::Bool { span: _, value: _ } = value {
                 } else {
                     errors.push(ValidationError {
                         message: format!("{} is not a boolean", value),
+                        span: value.span(),
                     })
                 }
             }
 
-            ValueValidator::Number(validators) => {
-                if let document::Scalar::Number(number) = value {
+            ScalarValidator::Number(validators) => {
+                if let document::Scalar::Number { span, value } = value {
                     errors.extend(
                         validators
                             .iter()
-                            .filter_map(|v| v.validate(*number))
+                            .filter_map(|v| v.validate(*span, *value))
                             .collect::<Vec<_>>(),
                     );
                 } else {
                     errors.push(ValidationError {
                         message: format!("{} is not a number", value),
+                        span: value.span(),
                     })
                 }
             }
 
-            ValueValidator::String(validators) => {
-                if let document::Scalar::String(string) = value {
+            ScalarValidator::String(validators) => {
+                if let document::Scalar::String { span, value } = value {
                     errors.extend(
                         validators
                             .iter()
-                            .filter_map(|v| v.validate(string))
+                            .filter_map(|v| v.validate(*span, value))
                             .collect::<Vec<_>>(),
                     );
                 } else {
                     errors.push(ValidationError {
                         message: format!("{} is not a string", value),
+                        span: value.span(),
                     })
                 }
             }
@@ -190,7 +201,7 @@ impl ValueValidator {
 struct FieldValidator {
     name: String,
     multiplicity: Multiplicity,
-    rules: ValueValidator,
+    rules: ScalarValidator,
 }
 
 impl FieldValidator {
@@ -273,20 +284,20 @@ fn string_validator(constraint: &StringConstraint) -> Box<dyn ValidateString> {
     }
 }
 
-fn value_validator(field_type: &FieldType) -> ValueValidator {
+fn value_validator(field_type: &FieldType) -> ScalarValidator {
     match field_type {
-        FieldType::Bool => ValueValidator::Bool,
+        FieldType::Bool => ScalarValidator::Bool,
 
         FieldType::Number(constraints) => {
             let validators = constraints.iter().map(|c| number_validator(c)).collect();
 
-            ValueValidator::Number(validators)
+            ScalarValidator::Number(validators)
         }
 
         FieldType::String(constraints) => {
             let validators = constraints.iter().map(|c| string_validator(c)).collect();
 
-            ValueValidator::String(validators)
+            ScalarValidator::String(validators)
         }
     }
 }
