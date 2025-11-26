@@ -13,9 +13,11 @@ use commands::conform;
 fn main() -> Result<()> {
     let cli = Cli::parse();
 
+    let files = utils::expand_globs(&cli.document_files)?;
+
     let args = conform::Args {
         schema_file: cli.schema_file,
-        document_file: cli.document_file,
+        document_files: files,
         verbose: cli.verbose,
     };
 

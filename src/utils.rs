@@ -3,6 +3,7 @@ use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
 use tracing::{debug, error, info, warn};
+use glob::glob;
 
 pub fn init_tracing(level: u8) {
     let filter = match level {
@@ -64,3 +65,19 @@ pub fn ensure_dir(dir_path: &Path) {
         info!("INFO: Created directory {}", dir_path.display());
     }
 }
+
+pub fn expand_globs(patterns: &Vec<String>) -> Result<Vec<PathBuf>, glob::GlobError> {
+    let mut files = Vec::new();
+
+    for pattern in patterns {
+        for entry in glob(pattern).expect("Invalid glob pattern") {
+            let path = entry?;
+            files.push(path);
+        }
+    }
+
+    Ok(files)
+}
+
+
+

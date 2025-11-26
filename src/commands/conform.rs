@@ -11,7 +11,7 @@ use tracing::{debug, error, info, warn};
 #[derive(Debug)]
 pub struct Args {
     pub schema_file: PathBuf,
-    pub document_file: PathBuf,
+    pub document_files: Vec<PathBuf>,
     pub verbose: u8,
 }
 
@@ -40,14 +40,22 @@ pub fn handle(args: &Args) -> Result<()> {
     let validator = schema.compile();
     info!("Compiled schema into validator");
 
-    let document = document::parse(&args.document_file)?;
-    info!("Loaded document from file: {}", args.document_file.display());
+    let mut document_errors = Vec::new();
 
-    let document_errors = validator.validate(&document);
-    info!("Validated document");
+    for document_file in &args.document_files {
+        let document = document::parse(document_file)?;
+        info!("Loaded document from file: {}", document_file.display());
 
-    let errors = document_errors.as_ref()
-        .map_or(Vec::new(), |e| e.flatten());
+        if let Some(document_error) = validator.validate(&document) {
+            document_errors.push(document_error);
+        }
+        info!("Validated document");
+    }
+
+    let errors = document_errors
+        .iter()
+        .flat_map(|e| e.flatten())
+        .collect();
 
     let quickfix = validation::errors_to_quickfix(errors);
     print!("{}", quickfix);

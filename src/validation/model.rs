@@ -2,7 +2,6 @@ use crate::document;
 use crate::schema::{Field, FieldType, Multiplicity, NumberConstraint, Schema, StringConstraint};
 use regex::Regex;
 use std::collections::HashSet;
-use std::path::PathBuf;
 use url::Url;
 
 pub trait FlattenErrors {
