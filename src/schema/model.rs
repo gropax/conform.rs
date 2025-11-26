@@ -1,6 +1,6 @@
 use regex::Regex;
 
-use crate::validator::DocumentValidator;
+use crate::validate::DocumentValidator;
 
 #[derive(Debug, Clone, Copy, Default)]
 pub enum Multiplicity {

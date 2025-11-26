@@ -55,8 +55,20 @@ impl Value {
 }
 
 #[derive(Debug)]
-pub struct Field {
+pub struct Span {
+    pub line: usize,
+    pub column: usize,
+}
+
+#[derive(Debug)]
+pub struct FieldKey {
     pub name: String,
+    pub span: Span,
+}
+
+#[derive(Debug)]
+pub struct Field {
+    pub key: FieldKey,
     pub value: Value,
 }
 

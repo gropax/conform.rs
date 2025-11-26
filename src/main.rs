@@ -2,7 +2,7 @@ mod cli;
 mod commands;
 mod schema;
 mod document;
-mod validator;
+mod validate;
 mod utils;
 
 use anyhow::Result;
