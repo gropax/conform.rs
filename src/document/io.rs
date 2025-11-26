@@ -93,7 +93,7 @@ fn yaml_to_value(v: &MarkedYaml) -> Value {
     let span = yaml_to_span(v);
 
     if let Some(scalar) = yaml_to_scalar(v) {
-        Value::Single(span, scalar)
+        Value::Single { span, value: scalar }
     } else {
         match &v.data {
             YamlData::Sequence(arr) => {
@@ -102,13 +102,13 @@ fn yaml_to_value(v: &MarkedYaml) -> Value {
                 for item in arr {
                     match yaml_to_scalar(item) {
                         Some(s) => scalars.push(s),
-                        None => return Value::Invalid(span),
+                        None => return Value::Invalid { span },
                     }
                 }
 
-                Value::List(span, scalars)
+                Value::List { span, value: scalars }
             }
-            _ => Value::Invalid(span),
+            _ => Value::Invalid { span },
         }
     }
 }

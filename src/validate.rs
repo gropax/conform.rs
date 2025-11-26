@@ -233,18 +233,20 @@ impl FieldValidator {
     fn validate_multiplicity(&self, value: &document::Value) -> Option<ValidationError> {
         match self.multiplicity {
             Multiplicity::One => {
-                if let document::Value::List(_) = value {
+                if let document::Value::List { span, value: _ } = value {
                     Some(ValidationError {
                         message: "value is not a scalar".to_string(),
+                        span: *span,
                     })
                 } else {
                     None
                 }
             }
             Multiplicity::Many => {
-                if let document::Value::Single(_) = value {
+                if let document::Value::Single { span, value: _ } = value {
                     Some(ValidationError {
                         message: "value is not a list".to_string(),
+                        span: *span,
                     })
                 } else {
                     None
@@ -333,6 +335,7 @@ impl DocumentValidator {
                     field_name: field_validator.name.to_string(),
                     errors: vec![ValidationError {
                         message: format!("field [{}] is missing", field_validator.name),
+                        span: document.span,
                     }],
                     values: vec![],
                 })
@@ -341,10 +344,11 @@ impl DocumentValidator {
 
         let mut errors = vec![];
 
-        for field_name in document.fields.keys() {
-            if !self.field_names.contains(field_name) {
+        for field in document.fields.values() {
+            if !self.field_names.contains(&field.key.name) {
                 errors.push(ValidationError {
-                    message: format!("field [{}] is unknown", field_name),
+                    message: format!("field [{}] is unknown", field.key.name),
+                    span: field.key.span,
                 })
             }
         }

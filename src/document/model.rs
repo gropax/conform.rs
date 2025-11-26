@@ -31,9 +31,19 @@ impl fmt::Display for Scalar {
 
 #[derive(Debug)]
 pub enum Value {
-    Single(Span, Scalar),
-    List(Span, Vec<Scalar>),
-    Invalid(Span),
+    Single { span: Span, value: Scalar },
+    List { span: Span, value: Vec<Scalar> },
+    Invalid { span: Span },
+}
+
+impl Value {
+    pub fn span(&self) -> Span {
+        match *self {
+            Value::Single { span, value: _ } => span,
+            Value::List { span, value: _ } => span,
+            Value::Invalid { span } => span,
+        }
+    }
 }
 
 pub enum ValueIter<'a> {
@@ -57,9 +67,9 @@ impl<'a> Iterator for ValueIter<'a> {
 impl Value {
     pub fn iter(&self) -> ValueIter<'_> {
         match self {
-            Value::Single(_, s) => ValueIter::Single(Some(s).into_iter()),
-            Value::List(_, v) => ValueIter::List(v.iter()),
-            Value::Invalid(_) => ValueIter::Invalid,
+            Value::Single { span: _, value } => ValueIter::Single(Some(value).into_iter()),
+            Value::List { span: _, value } => ValueIter::List(value.iter()),
+            Value::Invalid { span: _ } => ValueIter::Invalid,
         }
     }
 }
