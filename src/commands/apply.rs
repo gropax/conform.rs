@@ -41,5 +41,8 @@ pub fn handle(args: &Args) -> Result<()> {
     let document = document::parse(&args.document_file)?;
     info!("Loaded document from file: {}", args.document_file.display());
 
+    let errors = validator.validate(&document);
+    info!("Validated document");
+
     Ok(())
 }
