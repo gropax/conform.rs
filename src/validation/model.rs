@@ -53,7 +53,7 @@ impl FlattenErrors for FieldError {
 
 #[derive(Debug)]
 pub struct DocumentError {
-    pub file_path: PathBuf,
+    pub file: String,
     pub errors: Vec<ValidationError>,
     pub fields: Vec<FieldError>,
 }
@@ -197,7 +197,7 @@ impl ScalarValidator {
                     errors.extend(
                         validators
                             .iter()
-                            .filter_map(|v| v.validate(*span, *value))
+                            .filter_map(|v| v.validate(span.clone(), *value))
                             .collect::<Vec<_>>(),
                     );
                 } else {
@@ -213,7 +213,7 @@ impl ScalarValidator {
                     errors.extend(
                         validators
                             .iter()
-                            .filter_map(|v| v.validate(*span, value))
+                            .filter_map(|v| v.validate(span.clone(), value))
                             .collect::<Vec<_>>(),
                     );
                 } else {
@@ -274,7 +274,7 @@ impl FieldValidator {
                 if let document::Value::List { span, value: _ } = value {
                     Some(ValidationError {
                         message: "value is not a scalar".to_string(),
-                        span: *span,
+                        span: span.clone(),
                     })
                 } else {
                     None
@@ -284,7 +284,7 @@ impl FieldValidator {
                 if let document::Value::Single { span, value: _ } = value {
                     Some(ValidationError {
                         message: "value is not a list".to_string(),
-                        span: *span,
+                        span: span.clone(),
                     })
                 } else {
                     None
@@ -373,7 +373,7 @@ impl DocumentValidator {
                     field_name: field_validator.name.to_string(),
                     errors: vec![ValidationError {
                         message: format!("field [{}] is missing", field_validator.name),
-                        span: document.span,
+                        span: document.span.clone(),
                     }],
                     values: vec![],
                 })
@@ -386,7 +386,7 @@ impl DocumentValidator {
             if !self.field_names.contains(&field.key.name) {
                 errors.push(ValidationError {
                     message: format!("field [{}] is unknown", field.key.name),
-                    span: field.key.span,
+                    span: field.key.span.clone(),
                 })
             }
         }
@@ -395,7 +395,7 @@ impl DocumentValidator {
             None
         } else {
             Some(DocumentError {
-                file_path: document.file_path.clone(),
+                file: document.span.file.to_string(),
                 errors,
                 fields,
             })

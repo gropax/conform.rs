@@ -2,6 +2,8 @@ use crate::document;
 use crate::schema;
 use crate::schema::Multiplicity;
 use crate::utils;
+use crate::validation;
+use crate::validation::FlattenErrors;
 use anyhow::Result;
 use std::path::PathBuf;
 use tracing::{debug, error, info, warn};
@@ -41,8 +43,14 @@ pub fn handle(args: &Args) -> Result<()> {
     let document = document::parse(&args.document_file)?;
     info!("Loaded document from file: {}", args.document_file.display());
 
-    let errors = validator.validate(&document);
+    let document_errors = validator.validate(&document);
     info!("Validated document");
+
+    let errors = document_errors.as_ref()
+        .map_or(Vec::new(), |e| e.flatten());
+
+    let quickfix = validation::errors_to_quickfix(errors);
+    print!("{}", quickfix);
 
     Ok(())
 }

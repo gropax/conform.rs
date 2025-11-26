@@ -2,6 +2,13 @@ use std::path::PathBuf;
 use std::fmt;
 use std::collections::HashMap;
 
+#[derive(Debug, Clone)]
+pub struct Span {
+    pub file: String,
+    pub line: usize,
+    pub column: usize,
+}
+
 #[derive(Debug)]
 pub enum Scalar {
     Bool { span: Span, value: bool },
@@ -11,10 +18,10 @@ pub enum Scalar {
 
 impl Scalar {
     pub fn span(&self) -> Span {
-        match *self {
-            Scalar::Bool { span, value: _ } => span,
-            Scalar::Number { span, value: _ } => span,
-            Scalar::String { span, value: _ } => span,
+        match self {
+            Scalar::Bool { span, value: _ } => span.clone(),
+            Scalar::Number { span, value: _ } => span.clone(),
+            Scalar::String { span, value: _ } => span.clone(),
         }
     }
 }
@@ -38,10 +45,10 @@ pub enum Value {
 
 impl Value {
     pub fn span(&self) -> Span {
-        match *self {
-            Value::Single { span, value: _ } => span,
-            Value::List { span, value: _ } => span,
-            Value::Invalid { span } => span,
+        match self {
+            Value::Single { span, value: _ } => span.clone(),
+            Value::List { span, value: _ } => span.clone(),
+            Value::Invalid { span } => span.clone(),
         }
     }
 }
@@ -74,12 +81,6 @@ impl Value {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
-pub struct Span {
-    pub line: usize,
-    pub column: usize,
-}
-
 #[derive(Debug)]
 pub struct FieldKey {
     pub name: String,
@@ -94,7 +95,6 @@ pub struct Field {
 
 #[derive(Debug)]
 pub struct Document {
-    pub file_path: PathBuf,
     pub fields: HashMap<String, Field>,
     pub span: Span,
 }
