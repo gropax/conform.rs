@@ -1,9 +1,13 @@
-mod model;
-mod errors;
+mod document;
+mod field;
 mod scalar;
+mod errors;
+mod validators;
 mod io;
 
-pub use model::*;
-pub use errors::*;
+pub use document::*;
+pub use field::*;
 pub use scalar::*;
+pub use errors::*;
+pub use validators::*;
 pub use io::*;
