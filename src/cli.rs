@@ -1,30 +1,13 @@
-use clap::{ArgAction, Parser, Subcommand};
+use clap::{ArgAction, Parser};
 use std::path::{PathBuf};
 
 #[derive(Debug, Parser)]
 #[command(name = "conform")]
 #[command(about = "A command line tool", long_about = None)]
 pub struct Cli {
-    #[command(subcommand)]
-    pub command: Commands,
-}
+    pub schema_file: PathBuf,
+    pub document_file: PathBuf,
 
-#[derive(Debug, Subcommand)]
-pub enum Commands {
-    #[command(arg_required_else_help = true)]
-    Check {
-        schema_file: PathBuf,
-
-        #[arg(short, long, action = ArgAction::Count)]
-        verbose: u8,
-    },
-
-    #[command(arg_required_else_help = true)]
-    Apply {
-        schema_file: PathBuf,
-        document_file: PathBuf,
-
-        #[arg(short, long, action = ArgAction::Count)]
-        verbose: u8,
-    },
+    #[arg(short, long, action = ArgAction::Count)]
+    pub verbose: u8,
 }

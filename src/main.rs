@@ -7,38 +7,19 @@ mod utils;
 
 use anyhow::Result;
 use clap::Parser;
-use cli::{Cli, Commands};
-use commands::apply;
-use commands::check;
+use cli::Cli;
+use commands::conform;
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
 
-    match cli.command {
-        Commands::Check {
-            schema_file,
-            verbose,
-        } => {
-            let args = check::Args {
-                schema_file,
-                verbose,
-            };
-            check::handle(&args)?;
-            Ok(())
-        }
+    let args = conform::Args {
+        schema_file: cli.schema_file,
+        document_file: cli.document_file,
+        verbose: cli.verbose,
+    };
 
-        Commands::Apply {
-            schema_file,
-            document_file,
-            verbose,
-        } => {
-            let args = apply::Args {
-                schema_file,
-                document_file,
-                verbose,
-            };
-            apply::handle(&args)?;
-            Ok(())
-        }
-    }
+    conform::handle(&args)?;
+
+    Ok(())
 }
