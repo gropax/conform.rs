@@ -13,12 +13,11 @@ use commands::conform;
 fn main() -> Result<()> {
     let cli = Cli::parse();
 
-    let files = utils::expand_globs(&cli.document_files)?;
+    utils::init_logging(cli.quiet, cli.verbose);
 
     let args = conform::Args {
         schema_file: cli.schema_file,
-        document_files: files,
-        verbose: cli.verbose,
+        document_patterns: cli.document_patterns,
     };
 
     conform::handle(&args)?;

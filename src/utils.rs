@@ -5,12 +5,15 @@ use std::path::{Path, PathBuf};
 use tracing::{debug, error, info, warn};
 use glob::glob;
 
-pub fn init_tracing(level: u8) {
-    let filter = match level {
-        0 => "error",
-        1 => "warn",
-        2 => "info",
-        _ => "debug",
+pub fn init_logging(quiet: bool, level: u8) {
+    let filter = if quiet {
+        "error"
+    } else {
+        match level {
+            0 => "warn",
+            1 => "info",
+            _ => "debug",
+        }
     };
 
     tracing_subscriber::fmt()
