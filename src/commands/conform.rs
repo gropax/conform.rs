@@ -3,7 +3,6 @@ use crate::schema;
 use crate::schema::Multiplicity;
 use crate::utils;
 use crate::validation;
-use crate::validation::FlattenErrors;
 use anyhow::Result;
 use std::path::PathBuf;
 use tracing::{debug, error, info, warn};
@@ -40,24 +39,21 @@ pub fn handle(args: &Args) -> Result<()> {
     let validator = schema.compile();
     info!("Compiled schema into validator");
 
-    let mut document_errors = Vec::new();
+    let mut errors: Vec<validation::SpanError> = Vec::new();
 
     for document_file in &args.document_files {
         let document = document::parse(document_file)?;
         info!("Loaded document from file: {}", document_file.display());
 
         if let Some(document_error) = validator.validate(&document) {
-            document_errors.push(document_error);
+            let span_errors = validation::into_span_errors(&document_error, document_file);
+            errors.extend(span_errors);
         }
         info!("Validated document");
     }
 
-    let errors = document_errors
-        .iter()
-        .flat_map(|e| e.flatten())
-        .collect();
 
-    let quickfix = validation::errors_to_quickfix(errors);
+    let quickfix = validation::to_quickfix(errors);
     print!("{}", quickfix);
 
     Ok(())

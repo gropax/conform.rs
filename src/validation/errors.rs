@@ -48,7 +48,6 @@ impl FlattenErrors for FieldError {
 
 #[derive(Debug)]
 pub struct DocumentError {
-    pub file: String,
     pub errors: Vec<ValidationError>,
     pub fields: Vec<FieldError>,
 }

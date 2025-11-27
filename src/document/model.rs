@@ -1,10 +1,8 @@
-use std::path::PathBuf;
 use std::fmt;
 use std::collections::HashMap;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Span {
-    pub file: String,
     pub line: usize,
     pub column: usize,
 }

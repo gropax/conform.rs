@@ -1,7 +1,5 @@
 use super::{Document, Field, FieldKey, Value, Scalar, Span};
 use super::convert::{DocumentError};
-use serde_json::Value as JsonValue;
-use serde_yaml::Value as YamlValue;
 use std::fs;
 use std::path::PathBuf;
 use thiserror::Error;
@@ -64,7 +62,7 @@ pub fn parse(file_path: impl Into<PathBuf>) -> Result<Document, LoadError> {
 
     match path.extension().and_then(|ext| ext.to_str()) {
         //Some("json") => parse_json(&input, &path),
-        Some("yaml") | Some("yml") => parse_yaml(&input, &file),
+        Some("yaml") | Some("yml") => parse_yaml(&input),
         //Some("md") | Some("markdown") => parse_markdown(&input, &path),
 
         other => Err(LoadError::UnsupportedExtension(
@@ -75,8 +73,8 @@ pub fn parse(file_path: impl Into<PathBuf>) -> Result<Document, LoadError> {
 
 // YAML
 
-fn yaml_to_scalar(v: &MarkedYaml, file: &str) -> Option<Scalar> {
-    let span = yaml_to_span(v, file);
+fn yaml_to_scalar(v: &MarkedYaml) -> Option<Scalar> {
+    let span = yaml_to_span(v);
 
     match &v.data {
         YamlData::Value(s) => match s {
@@ -90,10 +88,10 @@ fn yaml_to_scalar(v: &MarkedYaml, file: &str) -> Option<Scalar> {
     }
 }
 
-fn yaml_to_value(v: &MarkedYaml, file: &str) -> Value {
-    let span = yaml_to_span(v, file);
+fn yaml_to_value(v: &MarkedYaml) -> Value {
+    let span = yaml_to_span(v);
 
-    if let Some(scalar) = yaml_to_scalar(v, file) {
+    if let Some(scalar) = yaml_to_scalar(v) {
         Value::Single { span, value: scalar }
     } else {
         match &v.data {
@@ -101,7 +99,7 @@ fn yaml_to_value(v: &MarkedYaml, file: &str) -> Value {
                 let mut scalars = vec![];
 
                 for item in arr {
-                    match yaml_to_scalar(item, file) {
+                    match yaml_to_scalar(item) {
                         Some(s) => scalars.push(s),
                         None => return Value::Invalid { span },
                     }
@@ -114,7 +112,7 @@ fn yaml_to_value(v: &MarkedYaml, file: &str) -> Value {
     }
 }
 
-fn yaml_to_key(k: &MarkedYaml, file: &str) -> Result<FieldKey, DocumentError> {
+fn yaml_to_key(k: &MarkedYaml) -> Result<FieldKey, DocumentError> {
     let name = match k.data.as_str() {
         Some(s) => s,
         None => return Err(DocumentError::NonStringKey),
@@ -122,21 +120,20 @@ fn yaml_to_key(k: &MarkedYaml, file: &str) -> Result<FieldKey, DocumentError> {
 
     let key = FieldKey {
         name: name.to_string(),
-        span: yaml_to_span(k, file),
+        span: yaml_to_span(k),
     };
 
     Ok(key)
 }
 
-fn yaml_to_span(v: &MarkedYaml, file: &str) -> Span {
+fn yaml_to_span(v: &MarkedYaml) -> Span {
     Span {
-        file: file.to_string(),
         line: v.span.start.line(),
         column: v.span.start.col(),
     }
 }
 
-pub fn yaml_to_document(root: &MarkedYaml, file: &str) -> Result<Document, DocumentError> {
+pub fn yaml_to_document(root: &MarkedYaml) -> Result<Document, DocumentError> {
     let object = match root.data.as_mapping() {
         Some(obj) => obj,
         None => return Err(DocumentError::RootNotObject)
@@ -145,8 +142,8 @@ pub fn yaml_to_document(root: &MarkedYaml, file: &str) -> Result<Document, Docum
     let mut fields = HashMap::new();
 
     for (k, v) in object.iter() {
-        let key = yaml_to_key(k, file)?;
-        let value = yaml_to_value(v, file);
+        let key = yaml_to_key(k)?;
+        let value = yaml_to_value(v);
 
         fields.insert(
             key.name.to_string(),
@@ -159,14 +156,14 @@ pub fn yaml_to_document(root: &MarkedYaml, file: &str) -> Result<Document, Docum
 
     Ok(Document {
         fields,
-        span: yaml_to_span(root, file),
+        span: yaml_to_span(root),
     })
 }
 
-pub fn parse_yaml(input: &str, file: &str) -> Result<Document, LoadError> {
+pub fn parse_yaml(input: &str) -> Result<Document, LoadError> {
     let yaml_docs = MarkedYaml::load_from_str(input)?;
     // Error in multiple documents
     let yaml_doc = &yaml_docs[0];
-    let document = yaml_to_document(yaml_doc, file)?;
+    let document = yaml_to_document(yaml_doc)?;
     Ok(document)
 }

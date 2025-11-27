@@ -43,7 +43,6 @@ impl DocumentValidator {
             None
         } else {
             Some(DocumentError {
-                file: document.span.file.to_string(),
                 errors,
                 fields,
             })
