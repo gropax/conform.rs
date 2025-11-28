@@ -18,13 +18,9 @@
         pkgs = import nixpkgs { inherit system; };
       in
       {
-        packages.default = pkgs.rustPlatform.buildRustPackage {
-          pname = "conform";
-          version = "0.1.0";
+        packages.default = pkgs.callPackage ./nix/pkg.nix {
+          inherit pkgs;
           src = pkgs.lib.cleanSource ./.;  # Prevent rebuilding after modifying non source file
-          cargoLock = {
-            lockFile = ./Cargo.lock;
-          };
         };
 
         devShells.default = pkgs.mkShell {
