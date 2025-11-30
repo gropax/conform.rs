@@ -27,7 +27,7 @@ impl TryFrom<RawMultiplicity> for Multiplicity {
 
 fn number_constraints(
 ) -> Result<Vec<NumberConstraint>, SchemaError> {
-    let mut constraints = Vec::<NumberConstraint>::new();
+    let constraints = Vec::<NumberConstraint>::new();
 
     Ok(constraints)
 }

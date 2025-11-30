@@ -1,9 +1,9 @@
 mod cli;
 mod commands;
-mod schema;
 mod document;
-mod validation;
+mod schema;
 mod utils;
+mod validation;
 
 use anyhow::Result;
 use clap::Parser;
