@@ -4,6 +4,7 @@ use crate::validation::{FieldError, ScalarValidator, ValidationError};
 
 pub struct FieldValidator {
     pub name: String,
+    pub optional: bool,
     pub multiplicity: Multiplicity,
     pub rules: ScalarValidator,
 }

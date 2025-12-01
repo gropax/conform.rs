@@ -52,18 +52,30 @@ fn string_constraints(
 
 fn convert_field(name: String, raw: RawField) -> Result<Field, SchemaError> {
     let field = match raw {
-        RawField::Number { multiplicity } => {
+        RawField::Bool { optional } => {
+            let multiplicity = Multiplicity::One;
+            Field {
+                name,
+                multiplicity,
+                optional,
+                kind: FieldType::Bool,
+            }
+        }
+
+        RawField::Number { optional, multiplicity } => {
             let mult = Multiplicity::try_from(multiplicity)?;
             let constraints = number_constraints()?;
 
             Field {
                 name,
                 multiplicity: mult,
+                optional,
                 kind: FieldType::Number(constraints),
             }
         }
 
         RawField::Enum {
+            optional,
             multiplicity,
             values,
         } => {
@@ -73,11 +85,13 @@ fn convert_field(name: String, raw: RawField) -> Result<Field, SchemaError> {
             Field {
                 name,
                 multiplicity: mult,
+                optional,
                 kind: FieldType::String(constraints),
             }
         }
 
         RawField::String {
+            optional,
             multiplicity,
             starts_with,
             pattern,
@@ -88,11 +102,13 @@ fn convert_field(name: String, raw: RawField) -> Result<Field, SchemaError> {
             Field {
                 name,
                 multiplicity: mult,
+                optional,
                 kind: FieldType::String(constraints),
             }
         }
 
         RawField::Url {
+            optional,
             multiplicity,
             starts_with,
             pattern,
@@ -104,6 +120,7 @@ fn convert_field(name: String, raw: RawField) -> Result<Field, SchemaError> {
             Field {
                 name,
                 multiplicity: mult,
+                optional,
                 kind: FieldType::String(constraints),
             }
         }

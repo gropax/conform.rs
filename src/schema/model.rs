@@ -35,6 +35,7 @@ pub enum StringConstraint {
 pub struct Field {
     pub name: String,
     pub multiplicity: Multiplicity,
+    pub optional: bool,
     pub kind: FieldType,
 }
 

@@ -61,6 +61,7 @@ impl From<&Field> for FieldValidator {
 
         FieldValidator {
             name: field.name.to_string(),
+            optional: field.optional,
             multiplicity: field.multiplicity,
             rules,
         }

@@ -16,7 +16,7 @@ impl DocumentValidator {
                 if let Some(field_error) = field_validator.validate(document_field) {
                     fields.push(field_error)
                 }
-            } else {
+            } else if !field_validator.optional {
                 fields.push(FieldError {
                     field_name: field_validator.name.to_string(),
                     errors: vec![ValidationError {
@@ -39,7 +39,7 @@ impl DocumentValidator {
             }
         }
 
-        if fields.is_empty() {
+        if fields.is_empty() && errors.is_empty() {
             None
         } else {
             Some(DocumentError {
